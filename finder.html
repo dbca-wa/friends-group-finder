@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Find a Conservation Group</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Heebo:400,500,700&display=swap">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+        <script type="text/javascript" src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+        <script type="text/javascript" src="https://unpkg.com/leaflet-pip@1.1.0/leaflet-pip.js" integrity="sha384-VfrdCS+epUUBb4DAqpTSWj7O4LmwA24lhLVnTt/XF1eNKWIBBsGcp6uMI4ro5z8L" crossorigin=""></script>
+        <script type="text/javascript" src="https://unpkg.com/jquery@3.4.1/dist/jquery.js" integrity="sha384-mlceH9HlqLp7GMKHrj5Ara1+LvdTZVMx4S1U43/NxCvAkzIo8WJ0FE7duLel3wVo" crossorigin=""></script>
+        <style>
+            body {
+                margin:0;
+                font-family: "Heebo", Arial, Helvetica, sans-serif;
+            }
+            #map {
+                /* width: 800px; */
+                height: 100vh;
+		    }
+            .leaflet-popup-content {
+                max-width: 300px;
+                height: 300px;
+                overflow-y: scroll;
+            }
+            .leaflet-bottom.leaflet-left.leaflet-control:not(:empty) {
+                -moz-box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+                -webkit-box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+            }
+            .leaflet-bottom.leaflet-left.leaflet-control {
+                margin: 0 0 10px 10px;
+                float: left;
+            }
+            .leaflet-control {
+                border-radius: 4px;
+                overflow: hidden;
+                background: #fff;
+            }
+            .leaflet-ctrl-geolocate {
+                width: 30px;
+                height: 30px;
+                display: block;
+                padding: 0;
+                outline: none;
+                border: 0;
+                box-sizing: border-box;
+                background-color: transparent;
+                cursor: pointer;
+            }
+            .leaflet-ctrl-icon.leaflet-ctrl-geolocate {
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' fill='%23333'%3E %3Cpath d='M10 4C9 4 9 5 9 5L9 5.1A5 5 0 0 0 5.1 9L5 9C5 9 4 9 4 10 4 11 5 11 5 11L5.1 11A5 5 0 0 0 9 14.9L9 15C9 15 9 16 10 16 11 16 11 15 11 15L11 14.9A5 5 0 0 0 14.9 11L15 11C15 11 16 11 16 10 16 9 15 9 15 9L14.9 9A5 5 0 0 0 11 5.1L11 5C11 5 11 4 10 4zM10 6.5A3.5 3.5 0 0 1 13.5 10 3.5 3.5 0 0 1 10 13.5 3.5 3.5 0 0 1 6.5 10 3.5 3.5 0 0 1 10 6.5zM10 8.3A1.8 1.8 0 0 0 8.3 10 1.8 1.8 0 0 0 10 11.8 1.8 1.8 0 0 0 11.8 10 1.8 1.8 0 0 0 10 8.3z'/%3E %3C/svg%3E");
+            }
+            button.leaflet-ctrl-geolocate:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+            .leaflet-ctrl {
+                clear: both;
+                pointer-events: auto;
+                transform: translate(0, 0);
+            }
+            /* Popup box */
+            .leaflet-container {
+                font: 12px/1.5 "Heebo", Arial, Helvetica, sans-serif;
+            }
+            .leaflet-popup-content-wrapper {
+                background: #fff;
+                border-radius: 3px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                padding: 0 0 1px 0;
+                pointer-events: auto;
+            }
+            .leaflet-popup-content h3 {
+                background: #4d9de0;
+                color: #fff;
+                display: block;
+                border-radius: 3px 3px 0 0;
+                font-weight: 400;
+                margin: 0;
+                padding: 10px;
+                font-size: 1.6em;
+            }
+            .leaflet-popup-content .item {
+                display: block;
+                border-bottom: 1px solid #eee;
+                text-decoration: none;
+                padding: 10px 5px;
+            }
+            .leaflet-popup-content {
+                width: 350px;
+                height:auto;
+                max-height: 400px;
+                width:350px !IMPORTANT;
+                padding: 0;
+                margin:0;
+                overflow-y: auto;
+            }
+            .popupInfo {
+                overflow-wrap: break-word;
+            }
+            .leaflet-container a.leaflet-popup-close-button:hover {
+                color: #ffd200;
+            }
+            .leaflet-container .btn {
+                display: inline-block;
+                margin-bottom: 0;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.42857143;
+                text-align: center;
+                white-space: nowrap;
+                vertical-align: middle;
+                cursor: pointer;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background-image: none;
+                border: 1px solid transparent;
+                border-radius: 3px;
+                padding: 3px;
+            }
+            .leaflet-container .btn-default {
+                color: #333;
+                background-color: #fff;
+                border-color: #ccc;
+            }
+
+            .float-right {
+                float: right!important;
+            }
+            .chevron-down {
+                width:15px;
+                height:15px;
+                background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z'/%3E%3C/svg%3E") no-repeat 0 0;
+            }
+            .leaflet-container a.leaflet-popup-close-button {
+                position: absolute;
+                top: 0;
+                right: 0;
+                padding: 5px 5px 0 0;
+                border: none;
+                text-align: center;
+                width: 20px;
+                height: 20px;
+                font: 20px/14px Tahoma, Verdana, sans-serif;
+                color: #fff;
+                text-decoration: none;
+                font-weight: bold;
+                background: transparent;
+            }
+            .listings {padding:10px;
+                max-height: 300px;
+                overflow-y: auto;
+                margin-bottom: 10px;
+            }
+            .listings .title {font: 400 15px/22px 'Heebo', sans-serif; }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <div class="leaflet-bottom leaflet-left">
+            <div class="leaflet-control-zoom leaflet-bar leaflet-control">
+            <button class="leaflet-ctrl-icon leaflet-ctrl-geolocate"></button>
+            </div>
+        </div>
+
+        <script>
+            // Variable used to store all the features present in a particular point
+            var selected_features = null;
+            var selected = "";
+
+            // Styles for the friends and regional layers
+            var friendsStyle = {
+                color: "red",
+                fillcolor: "#ff0000",
+                weight: 2,
+                fillOpacity: 0.1
+                };
+            var regionalStyle = {
+                color: "yellow",
+                fillcolor: "#ffff80",
+                weight: 2,
+                fillOpacity: 0.1
+                };
+
+            // Setting up the map
+            var map = L.map('map').setView([-32.010405, 115.903015 ],9);
+            var streets = L.tileLayer.wms(
+                'https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wms',
+                {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a   href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    layers: 'dbca:mapbox-streets',
+                    format: 'image/png',
+                    tiled: true,
+                    version: '1.1.1'
+
+                }
+            ).addTo(map);
+            var satellite = L.tileLayer.wms(
+                'https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wms',
+                {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a   href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    layers: 'dbca:mapbox-satellite',
+                    format: 'image/png',
+                    tiled: true,
+                    version: '1.1.1'
+
+                }
+            ).addTo(map);
+
+            $('.leaflet-ctrl-geolocate').on('click', function(){
+                map.locate({setView: true, maxZoom: 15});
+                });
+
+            map.on('locationfound', onLocationFound);
+            function onLocationFound(e) {
+                console.log(e);
+                // e.heading will contain the user's heading (in degrees) if it's available, and if not it will be NaN. This would allow you to point a marker in the same direction the user is pointed.
+                L.marker(e.latlng).addTo(map);
+            }
+
+            map.options.minZoom = 6;
+            map.createPane('labels');
+            map.getPane('labels').style.zIndex = 650;
+            map.getPane('labels').style.pointerEvents = 'none';
+
+            var friends = [];
+
+            $.ajax({
+                dataType: "json",
+                url : "https://services3.arcgis.com/lSP3CnkTXxMmSpdI/arcgis/rest/services/Friends_Of_Groups/FeatureServer/0/query",
+                data: {
+                    "where": "OBJECTID>0",
+                    "outFields": "ORG,SITENAME,CONTACT,PHONE,EMAIL,FACEBOOK,WEBSITE,GROUPTYPE,ABOUT,Shape__Area,Shape__Length",
+                    "f": "pgeojson",
+                },
+                success: function(data) {
+                    $(data.features).each(function(key, data) {
+                        friends.push(data);
+                    })
+                    var categories = {}, GROUPTYPE;
+                    var featureid = []
+
+                    function friendsfilter(feature){
+                        return feature.properties.GROUPTYPE === 'Friends' ;
+                    }
+                    function regionalfilter(feature){
+                        return feature.properties.GROUPTYPE === 'Regional' ;
+                    }
+
+                    friendslayer = L.geoJSON(friends, {
+                        style : friendsStyle,
+                        filter: friendsfilter
+                    }).addTo(map);
+
+                    regionallayer = L.geoJSON(friends, {
+                        style : regionalStyle,
+                        filter: regionalfilter
+                    }).addTo(map);
+
+                    // Empty layer group to hold the friends and regional layer, used to create the toggle functionality
+                    alllayer = L.layerGroup([friendslayer, regionallayer]);
+                    alllayer.addTo(map);
+
+                    var baseLayers = {
+                        "Streets": streets,
+                        "Satellite" : satellite,
+                    };
+
+                    var overlaysObj = {
+                        "Friends" : friendslayer ,
+                        "Regional" : regionallayer,
+                    };
+
+                    var control = L.control.layers(baseLayers, overlaysObj, {
+                        collapsed: false
+                    }).addTo(map);
+
+                    map.on('click',handleClick);
+                },
+                error: function() {
+                    console.log('Invalid query');
+                }
+            });
+
+            function findLayer(e){
+                // Determine which layers are selected in toggle friend,regional or both and displaying features in the point based on layers.
+                if(map.hasLayer(friendslayer) && map.hasLayer(regionallayer)){
+                        selected_features = leafletPip.pointInLayer(e.latlng,friendslayer,false)
+                        selected_features = selected_features.concat(leafletPip.pointInLayer(e.latlng,regionallayer,false))
+                    } else if(map.hasLayer(friendslayer)){
+                            selected_features = leafletPip.pointInLayer(e.latlng,friendslayer,false);
+                    } else if(map.hasLayer(regionallayer)){
+                            selected_features = leafletPip.pointInLayer(e.latlng,regionallayer,false);
+                    } else {
+                        selected_features = "";
+                    }
+                return selected_features;
+            }
+
+            // Function to create the popup content and format
+            function popupTemplate(selected_features){
+                itemsize = selected_features.length;
+                html ='';
+                if (itemsize)
+                    {
+                        for (var i = 0; i < itemsize; i++)  {
+                            if(i == 0){
+                               html += '<h3>Groups</h3><div class="listings">';
+                            }
+                            featureid = selected_features[i].feature.properties.FRIENDS_ID;
+                            (i === 0 )? html += "" : html += "" ;
+                            html +=  "<div class='item listings' id='item-"+i+"'><a class='zoomIn title' href='#' onclick='zoomToFeature(selected_features["+i+"])' >" + selected_features[i].feature.properties.ORG + "</a><a href='javascript:void(0);' class='btn btn-default btn-arrow float-right' onclick='toggle_visibility(\"friendsOf-"+i+"\", selected_features["+i+"]);'><div class='chevron-down'></div></a><div class='popupInfo' id='friendsOf-"+i+"' style='display:none;'>" ;
+                                    (selected_features[i].feature.properties.SITENAME == 'null') ?html+= "<br><b>Sitename:</b> " :
+                                    html+= "<br><b>Sitename:</b> " + selected_features[i].feature.properties.SITENAME + "";
+                                    (selected_features[i].feature.properties.CONTACT == 'null') ?html+= "<br><b>Contact:</b> " :
+                                    html+= "<br><b>Contact:</b> " + selected_features[i].feature.properties.CONTACT + "";
+                                    (selected_features[i].feature.properties.PHONE == 'null') ? html+="<br><b>Phone: </b>"  :
+                                    html+="<br><b>Phone: </b>" + selected_features[i].feature.properties.PHONE + "";
+                                    (selected_features[i].feature.properties.EMAIL == 'null') ? html+="<br><b>Email: </b>"
+                                    : html+="<br><b>Email: </b><a href='mailto:"+ selected_features[i].feature.properties.EMAIL +"'> " + selected_features[i].feature.properties.EMAIL + "</a>" ;
+                                    (selected_features[i].feature.properties.WEBSITE == 'null') ? html+="<br><b>Website: </b>" :
+                                    html+="<br><b>Website: </b><a href=" + selected_features[i].feature.properties.WEBSITE +" target='_blank'> " + selected_features[i].feature.properties.WEBSITE + "</a>" ;
+                                    (selected_features[i].feature.properties.FACEBOOK == 'null') ? html+="<br><b>Facebook: </b>" :
+                                    html+="<br><b>Facebook: </b><a href="+ selected_features[i].feature.properties.FACEBOOK + " target='_blank'> " + selected_features[i].feature.properties.FACEBOOK + "</a>" ;
+                                    (selected_features[i].feature.properties.ABOUT == null) ? html+="<br><b>About Us: </b>" :
+                                    html+="<br><b>About Us: </b> " + selected_features[i].feature.properties.ABOUT + "</div></div>" ;
+                            if( i == 0){
+                                html += "</div>";
+                            }
+                        }
+                        html +=  "</div>";
+                    }
+
+                return html;
+            }
+
+        // The click function used to find the features in a point, load popups and zoom-in and highlight selected feature
+            function handleClick(e) {
+                var html = '' ;
+
+                // Determine which layers are selected in toggle friend,regional or both and displaying features in the point based on layers.
+                selected_features = findLayer(e);
+                html = popupTemplate(selected_features)
+
+                // Generate the relevant popups
+                if (html) {
+                    map.on('popupclose', resethighlightStyle);
+                    map.openPopup(html, e.latlng);
+                }
+            }
+
+            // Function used to zoom into the feature, highlight it and reset previously selected feature.
+            function zoomToFeature(feat, id = null) {
+                map.fitBounds(feat.getBounds());
+
+                if(id == null ){
+                    var x = popupTemplate([feat]);
+                    feat.bindPopup(x).openPopup();
+                    feat.unbindPopup(x);
+                }
+                if (selected) {
+                    resethighlightStyle()
+                }
+                $('#popup').on('click', resethighlightStyle())
+                selected = feat;
+                feat.bringToFront();
+                feat.setStyle(highlight);
+            }
+
+            var closeSelection = function(){
+                resethighlightStyle();
+                map.closePopup();
+            }
+
+            var resethighlightStyle = function(){
+                layer1 = friendslayer;
+                layer2 = regionallayer;
+                layer1.setStyle(friendsStyle);
+                layer2.setStyle(regionalStyle);
+            }
+
+            var highlight = {
+                color: 'green',
+                weight: 2,
+                fillOpacity: 0.7
+            }
+
+            // Toggle the readmore
+            function toggle_visibility(id, feat) {
+                var e = document.getElementById(id);
+                if (e.style.display == 'block'){
+                    e.style.display = 'none';
+                }
+                else {
+                    e.style.display = 'block';
+                    zoomToFeature(feat, id)
+                }
+            }
+        </script>
+    </body>
+</html>
