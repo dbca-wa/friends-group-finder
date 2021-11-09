@@ -172,13 +172,13 @@
             var selected = "";
 
             // Styles for the friends and regional layers
-            var friendsStyle = {
+            const friendsStyle = {
                 color: "red",
                 fillcolor: "#ff0000",
                 weight: 2,
                 fillOpacity: 0.1
                 };
-            var regionalStyle = {
+            const regionalStyle = {
                 color: "yellow",
                 fillcolor: "#ffff80",
                 weight: 2,
@@ -186,35 +186,34 @@
                 };
 
             // Setting up the map
-            var map = L.map('map').setView([-32.010405, 115.903015 ],9);
-            var streets = L.tileLayer.wms(
-                'https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wms',
-                {
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a   href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
-                    maxZoom: 18,
-                    layers: 'public:mapbox-streets',
-                    format: 'image/png',
-                    tiled: true,
-                    version: '1.1.1'
+            const map = L.map('map',{
+                "crs": L.CRS.EPSG4326,
+                "maxBounds": [[-36, 112.6], [-13, 129.1]],
+                "center": [-31.95296, 115.86067],
+                "minZoom": 2,
+                "maxZoom": 17,
+                "zoom": 6
+            })
 
-                }
-            ).addTo(map);
-            var satellite = L.tileLayer.wms(
-                'https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wms',
+            const streets = L.tileLayer(
+                "https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=public:mapbox-streets&format=image/png&tilematrixset=gda94&TileMatrix=gda94:{z}&TileCol={x}&TileRow={y}",
                 {
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a   href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
-                    maxZoom: 18,
-                    layers: 'public:mapbox-satellite',
-                    format: 'image/png',
-                    tiled: true,
-                    version: '1.1.1'
-
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
+                    crossOrigin: true,
                 }
             ).addTo(map);
 
-            $('.leaflet-ctrl-geolocate').on('click', function(){
+            const satellite = L.tileLayer(
+                "https://kmi.dbca.wa.gov.au/geoserver/gwc/service/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=public:mapbox-satellite&format=image/png&tilematrixset=gda94&TileMatrix=gda94:{z}&TileCol={x}&TileRow={y}",
+                {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//www.mapbox.com/">Mapbox</a>',
+                    crossOrigin: true,
+                }
+            ).addTo(map);
+
+            $('.leaflet-ctrl-geolocate').on('click', function() {
                 map.locate({setView: true, maxZoom: 15});
-                });
+            });
 
             map.on('locationfound', onLocationFound);
             function onLocationFound(e) {
@@ -223,7 +222,6 @@
                 L.marker(e.latlng).addTo(map);
             }
 
-            map.options.minZoom = 6;
             map.createPane('labels');
             map.getPane('labels').style.zIndex = 650;
             map.getPane('labels').style.pointerEvents = 'none';
@@ -237,6 +235,7 @@
                     "where": "OBJECTID>0",
                     "outFields": "ORG,SITENAME,CONTACT,PHONE,EMAIL,FACEBOOK,WEBSITE,GROUPTYPE,ABOUT,Shape__Area,Shape__Length",
                     "f": "pgeojson",
+                    "outSR": "4326",
                 },
                 success: function(data) {
                     $(data.features).each(function(key, data) {
@@ -266,17 +265,17 @@
                     alllayer = L.layerGroup([friendslayer, regionallayer]);
                     alllayer.addTo(map);
 
-                    var baseLayers = {
+                    const baseLayers = {
                         "Streets": streets,
                         "Satellite" : satellite,
                     };
 
-                    var overlaysObj = {
+                    const overlaysObj = {
                         "Friends" : friendslayer ,
                         "Regional" : regionallayer,
                     };
 
-                    var control = L.control.layers(baseLayers, overlaysObj, {
+                    const control = L.control.layers(baseLayers, overlaysObj, {
                         collapsed: false
                     }).addTo(map);
 
@@ -372,19 +371,19 @@
                 feat.setStyle(highlight);
             }
 
-            var closeSelection = function(){
+            const closeSelection = function(){
                 resethighlightStyle();
                 map.closePopup();
             }
 
-            var resethighlightStyle = function(){
+            const resethighlightStyle = function(){
                 layer1 = friendslayer;
                 layer2 = regionallayer;
                 layer1.setStyle(friendsStyle);
                 layer2.setStyle(regionalStyle);
             }
 
-            var highlight = {
+            const highlight = {
                 color: 'green',
                 weight: 2,
                 fillOpacity: 0.7
